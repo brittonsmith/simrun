@@ -1,6 +1,11 @@
 Automated simulation running tools!
 
-Stop living your life beholden to your simulations.  Let them take care of themselves.  This set of scripts will requeue your simulations, sending you emails updating you on your job's progress or when your simulations run into trouble.  In your job script, replace the call to running Enzo with a call to simrun.pl.  For example, if your job script says the following:
+Stop living your life beholden to your simulations.  Let them take
+care of themselves.  This set of scripts will requeue your
+simulations, sending you emails updating you on your job's progress or
+when your simulations run into trouble.  In your job script, replace
+the call to running Enzo with a call to simrun.pl.  For example, if
+your job script says the following:
 
 mpirun -np 16 ./enzo.exe -d simulation.enzo >& estd.out
 
@@ -8,7 +13,9 @@ Change it to:
 
 ./simrun.pl -mpi "mpirun -np 16" -pf simulation.enzo
 
-For simulation restarts, simrun.pl will check the OutputLog file to pick up the last dataset written and restart from there.  For additional options, type:
+For simulation restarts, simrun.pl will check the OutputLog file to
+pick up the last dataset written and restart from there.  For
+additional options, type:
 
 ./simrun.pl -h
 
@@ -16,12 +23,22 @@ For best results, set the following parameter in your parameter file.
 
 NumberOfOutputsBeforeExit = 1
 
-This will tell Enzo to exit cleanly after writing a single dataset.  After shutting down, simrun.pl will determine if there is enough time remaining to reach the point where Enzo will write another dataset.  If not, simrun.pl will requeue the job and end the current job.
+This will tell Enzo to exit cleanly after writing a single dataset.
+After shutting down, simrun.pl will determine if there is enough time
+remaining to reach the point where Enzo will write another dataset.
+If not, simrun.pl will requeue the job and end the current job.
 
 GETTING EMAIL UPDATES ON SIMULATION PROGRESS
 
-Most supercomputers do not allow the compute nodes to see the internet.  In order for emails to be sent on job progress, a separate process must be run from a login node.  The postman.pl script will monitor directories provided on the command line for messages left by simrun.pl.  The best way to do this is to run postman.pl from a screen session on a login node.  Simply list all the simulation directories which are to be watched.  For example,
+Most supercomputers do not allow the compute nodes to see the
+internet.  In order for emails to be sent on job progress, a separate
+process must be run from a login node.  The postman.pl script will
+monitor directories provided on the command line for messages left by
+simrun.pl.  The best way to do this is to run postman.pl from a screen
+session on a login node.  Simply list all the simulation directories
+which are to be watched.  For example,
 
 ./postman.pl simulation_dir_1 simulation_dir_2 ... &
 
-The code will leave a log indicating how many directories it is following and when it finds and sends messages.
+The code will leave a log indicating how many directories it is
+following and when it finds and sends messages.
