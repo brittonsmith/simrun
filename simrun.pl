@@ -82,13 +82,13 @@ while (1) {
 
   if (($last_output eq $run_par_file) || !($last_output)) {
     &write_log("Simulation did not make new data, exiting.\n");
-    &send_email("\'kraken job: $job_name in trouble!\'",
+    &send_email("\'supercomputer says: $job_name in trouble!\'",
 		"Hey,\nThe simulation exited without making new data.\nPlease help!\n");
     exit(0);
   }
   if (-e $run_finished_file) {
     &write_log("Simulation finished, exiting.\n");
-    &send_email("\'kraken job: $job_name finished!\'",
+    &send_email("\'supercomputer says: $job_name finished!\'",
 		"Hey,\nDon\'t get too excited, but I think this simulation may be done!\n");
     exit(0);
   }
@@ -99,7 +99,7 @@ while (1) {
 	  &write_log("Insufficient time remaining to reach next output.\n");
 	  $newid = &submit_job();
 	  $last_output = &get_last_output();
-	  &send_email("\'kraken job: $job_name stopped for today\'",
+	  &send_email("\'supercomputer says: $job_name stopped for today\'",
 		      "Job started at: $first_output.\nJob ended at: $last_output.\nResubmitted as: $newid.\n");
 	  exit(0);
       }
