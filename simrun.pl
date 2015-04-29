@@ -56,6 +56,7 @@ $enzo_log_file = "OutputLog";
 $log_file = "run.log";
 
 $last_output = &get_last_output();
+&change_parameters($last_output);
 $first_output = $last_output;
 
 $start_time = time;
@@ -76,6 +77,7 @@ while (1) {
   $last_run_time = time;
   system($command_line);
 
+  &change_parameters($last_output);
   $last_output = &get_last_output();
 
   if (($last_output eq $run_par_file) || !($last_output)) {
@@ -138,6 +140,62 @@ sub submit_job {
     $jobid = `qsub $job_file`;
     chomp $jobid;
     return $jobid;
+}
+
+sub change_parameters {
+    my ($parFile) = @_;
+    $newParFile = $parFile . ".new";
+    $oldParFile = $parFile . ".old";
+
+    my $change_file = "new_pars";
+    if (!(-e $change_file)) {
+	return;
+    }
+
+    open (IN, "<$change_file") or return;
+    my @lines = <IN>;
+    close (IN);
+
+    %newPars = ();
+    foreach $line (@lines) {
+	my ($my_key, $my_val) = split "=", $line, 2;
+	$my_key =~ s/\s//g;
+	$my_val =~ s/\s//g;
+	$newPars{$my_key} = $my_val;
+    }
+
+    foreach $key (keys %newPars) {
+	$changed{$key} = 0;
+    }
+
+    open (IN,"<$parFile") or die "Couldn't open $parFile.\n";
+    open (OUT,">$newParFile") or die "Couldn't open $newParFile.\n";
+    while (my $line = <IN>) {
+	my $did = 0;
+      PAR: foreach $par (keys %newPars) {
+	  if ($line =~ /^\s*$par\s*=\s*/) {
+	      &write_log("Switching $par to $newPars{$par}.\n");
+	      print OUT "$par = $newPars{$par}\n";
+	      $changed{$par} = 1;
+	      $did = 1;
+	      last PAR;
+	  }
+      }
+	print OUT $line unless($did);
+    }
+    foreach $par (keys %changed) {
+	unless ($changed{$par}) {
+	    &write_log("Adding $par parameter set to $newPars{$par}.\n");
+	    print OUT "$par = $newPars{$par}\n";
+	}
+    }
+    close (IN);
+    close (OUT);
+
+    system ("mv $parFile $oldParFile");
+    system ("mv $newParFile $parFile");
+    my $new_change_file = $change_file . ".old";
+    system ("mv $change_file $new_change_file");
 }
 
 sub print_help {
