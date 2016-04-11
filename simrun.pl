@@ -109,10 +109,10 @@ while (1) {
 
 sub write_log {
   my ($line) = @_;
-  open (OUT, ">>$log_file");
-  print OUT scalar (localtime);
-  print OUT " $line";
-  close (OUT);
+  open (LOG, ">>$log_file");
+  print LOG scalar (localtime);
+  print LOG " $line";
+  close (LOG);
 }
 
 sub get_last_output {
