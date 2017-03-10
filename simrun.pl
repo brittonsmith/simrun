@@ -77,8 +77,8 @@ while (1) {
   $last_run_time = time;
   system($command_line);
 
-  &change_parameters($last_output);
   $last_output = &get_last_output();
+  &change_parameters($last_output);
 
   if (($last_output eq $run_par_file) || !($last_output)) {
     &write_log("Simulation did not make new data, exiting.\n");
