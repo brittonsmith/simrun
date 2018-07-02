@@ -73,6 +73,7 @@ while (1) {
     $enzo_flags = "-d";
   }
 
+  &rename_output_file($output_file);
   $command_line = "$mpi_command $enzo_executable $enzo_flags $run_par_file >& $output_file";
   print "Running: $command_line\n";
   &write_log("Starting enzo with $run_par_file.\n");
@@ -198,6 +199,28 @@ sub change_parameters {
     system ("mv $newParFile $parFile");
     my $new_change_file = $change_file . ".old";
     system ("mv $change_file $new_change_file");
+}
+
+sub rename_output_file {
+    my ($filename) = @_;
+    if (!(-e $filename)) {
+        return;
+    }
+
+    $filename =~ /(.+)\.(.+)$/;
+    $prefix = $1;
+    $suffix = $2;
+    while (1) {
+        $new_fn = sprintf("%s_%d.%s", $prefix, $i, $suffix);
+        if (-e $new_fn) {
+            $i++
+        }
+        else {
+            &write_log("Renaming $filename as $new_fn.\n");
+            system("mv $filename $new_fn");
+            return;
+        }
+    }
 }
 
 sub print_help {
