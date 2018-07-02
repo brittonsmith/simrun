@@ -3,7 +3,7 @@
 #
 # Automated simulation runner.
 #
-# Copyright (c) 2012-2014, Britton Smith <brittonsmith@gmail.com>
+# Copyright (c) Britton Smith <brittonsmith@gmail.com>. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -18,6 +18,7 @@ $email_address = ''; # put email in singe quotes
 $job_file = "run_enzo.qsub";
 $parameter_file = (glob("*.enzo"))[0];
 $enzo_executable = "./enzo.exe";
+$output_file = "estd.out";
 $walltime = 86400;
 
 while ($arg = shift @ARGV) {
@@ -39,6 +40,9 @@ while ($arg = shift @ARGV) {
     elsif ($arg =~ /^-email/) {
         $email_address = shift @ARGV;
     }
+    elsif ($arg =~ /^-of/) {
+        $output_file = shift @ARGV;
+    }
     elsif ($arg =~ /^-h/) {
         &print_help();
     }
@@ -48,8 +52,6 @@ while ($arg = shift @ARGV) {
 }
 
 die "No mpi call given.\n" unless ($mpi_command);
-
-$output_file = "estd.out";
 
 $run_finished_file = "RunFinished";
 $enzo_log_file = "OutputLog";
@@ -202,9 +204,11 @@ sub print_help {
     print "Usage: $0 -mpi <mpi command> [options]\n";
     print "Options:\n";
     print "  -email <email address>\n";
-    print "  -wall <walltime in seconds> Default: 86400 (24 hours)\n";
-    print "  -pf <simulation parameter file> Default: *.enzo\n";
     print "  -exe <enzo executable> Default: enzo.exe\n";
     print "  -jf <job script> Default: run_enzo.qsub\n";
+    print "  -mpi <mpi command> Example: mpirun -np 16, Default: none\n";
+    print "  -of <enzo output file> Default: estd.out\n";
+    print "  -pf <simulation parameter file> Default: *.enzo\n";
+    print "  -wall <walltime in seconds> Default: 86400 (24 hours)\n";
     exit(0);
 }
