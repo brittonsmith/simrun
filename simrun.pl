@@ -74,7 +74,7 @@ while (1) {
   }
 
   &rename_output_file($output_file);
-  $command_line = "$mpi_command $enzo_executable $enzo_flags $run_par_file >& $output_file";
+  $command_line = "$mpi_command $enzo_executable $enzo_flags $run_par_file > $output_file 2>&1";
   print "Running: $command_line\n";
   &write_log("Starting enzo with $run_par_file.\n");
   $last_run_time = time;
