@@ -20,6 +20,7 @@ $parameter_file = (glob("*.enzo"))[0];
 $enzo_executable = "./enzo.exe";
 $output_file = "estd.out";
 $walltime = 86400;
+$submit_command = "qsub";
 
 while ($arg = shift @ARGV) {
     if ($arg =~ /^-mpi$/) {
@@ -42,6 +43,9 @@ while ($arg = shift @ARGV) {
     }
     elsif ($arg =~ /^-of/) {
         $output_file = shift @ARGV;
+    }
+    elsif ($arg =~ /^-sub/) {
+	$submit_command = shift @ARGV;
     }
     elsif ($arg =~ /^-h/) {
         &print_help();
@@ -140,7 +144,7 @@ sub send_email {
 }
 
 sub submit_job {
-    $jobid = `qsub $job_file`;
+    $jobid = `$submit_command $job_file`;
     chomp $jobid;
     return $jobid;
 }
