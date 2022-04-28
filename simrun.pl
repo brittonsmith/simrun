@@ -21,6 +21,7 @@ $enzo_executable = "./enzo.exe";
 $output_file = "estd.out";
 $walltime = 86400;
 $submit_command = "qsub";
+$tries = 1;
 
 while ($arg = shift @ARGV) {
     if ($arg =~ /^-mpi$/) {
@@ -47,6 +48,9 @@ while ($arg = shift @ARGV) {
     elsif ($arg =~ /^-sub/) {
 	$submit_command = shift @ARGV;
     }
+    elsif ($arg =~ /^-tries/) {
+        $tries = shift @ARGV;
+    }
     elsif ($arg =~ /^-h/) {
         &print_help();
     }
@@ -66,6 +70,8 @@ $last_output = &get_last_output();
 $first_output = $last_output;
 
 $start_time = time;
+$this_try = 0;
+
 while (1) {
 
   if ($last_output) {
@@ -82,23 +88,34 @@ while (1) {
   print "Running: $command_line\n";
   &write_log("Starting enzo with $run_par_file.\n");
   $last_run_time = time;
+  $this_try++;
+
   system($command_line);
 
   $last_output = &get_last_output();
   &change_parameters($last_output);
 
   if (($last_output eq $run_par_file) || !($last_output)) {
-    &write_log("Simulation did not make new data, exiting.\n");
-    &send_email("\'supercomputer says: $job_name in trouble!\'",
-		"Hey,\nThe simulation exited without making new data.\nPlease help!\n");
-    exit(0);
+      if ($this_try >= $tries) {
+          &write_log("Simulation did not make new data, exiting.\n");
+          &send_email(
+               "\'supercomputer says: $job_name in trouble!\'",
+               "Hey,\nThe simulation exited without making new data.\nPlease help!\n");
+          exit(1);
+      }
+      else {
+          &write_log(
+               "Simulation did not make new data, making try $this_try of $tries.\n");
+      }
   }
+
   if (-e $run_finished_file) {
     &write_log("Simulation finished, exiting.\n");
     &send_email("\'supercomputer says: $job_name finished!\'",
 		"Hey,\nDon\'t get too excited, but I think this simulation may be done!\n");
     exit(0);
   }
+
   if ($walltime) {
       $time_elapsed = time - $last_run_time;
       $time_left = $start_time + $walltime - time;
@@ -110,6 +127,9 @@ while (1) {
 		      "Job started at: $first_output.\nJob ended at: $last_output.\nResubmitted as: $newid.\n");
 	  exit(0);
       }
+  }
+  else {
+      $this_try = 0;
   }
 
 }
@@ -236,6 +256,8 @@ sub print_help {
     print "  -mpi <mpi command> Example: mpirun -np 16, Default: none\n";
     print "  -of <enzo output file> Default: estd.out\n";
     print "  -pf <simulation parameter file> Default: *.enzo\n";
+    print "  -sub <job submit command> Default: qsub\n";
+    print "  -tries <integer> - number of tries to run simulation (>1 to restart from crash) Default: 1\n";
     print "  -wall <walltime in seconds> Default: 86400 (24 hours)\n";
     exit(0);
 }
