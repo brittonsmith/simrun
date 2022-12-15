@@ -53,6 +53,9 @@ while ($arg = shift @ARGV) {
     elsif ($arg =~ /^-tries/) {
         $tries = shift @ARGV;
     }
+    elsif ($arg =~ /^-maxwait/) {
+        $max_waittime = shift @ARGV;
+    }
     elsif ($arg =~ /^-h/) {
         &print_help();
     }
@@ -156,8 +159,7 @@ sub runit {
             $since_update = time - (stat($ofn))[9];
             if ($since_update > $maxwait) {
                 &write_log(
-                     "No update from output file in $since_update seconds, ",
-                     "let's get out of here.\n");
+                     "No update from output file in $since_update seconds, let's get out of here.\n");
                 kill 9, $pid;
 
                 &write_log("Resubmitting, better luck next time.\n");
@@ -168,8 +170,7 @@ sub runit {
             if ((time - $ptime) > 3600) {
                 $since_start = time - $stime;
                 &write_log(
-                    "Running smoothly for $since_start seconds, ",
-                    "will check back later.\n");
+                    "Running smoothly for $since_start seconds, will check back later.\n");
                 $ptime = time;
             }
 
@@ -309,5 +310,6 @@ sub print_help {
     print "  -sub <job submit command> Default: qsub\n";
     print "  -tries <integer> - number of tries to run simulation (>1 to restart from crash) Default: 1\n";
     print "  -wall <walltime in seconds> Default: 86400 (24 hours)\n";
+    print "  -maxwait <integer> - number of seconds without writing to log file before requeueing. Default: 300.\n";
     exit(0);
 }
