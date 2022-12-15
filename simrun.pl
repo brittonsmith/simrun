@@ -11,6 +11,7 @@
 #-----------------------------------------------------------------------------
 
 use Cwd;
+use POSIX ":sys_wait_h";
 my $cdir = getcwd;
 $job_name = join "/", (split "/", $cdir)[-2 .. -1];
 
@@ -22,6 +23,7 @@ $output_file = "estd.out";
 $walltime = 86400;
 $submit_command = "qsub";
 $tries = 1;
+$max_waittime = 5 * 60;
 
 while ($arg = shift @ARGV) {
     if ($arg =~ /^-mpi$/) {
@@ -90,7 +92,7 @@ while (1) {
   $last_run_time = time;
   $this_try++;
 
-  system($command_line);
+  &runit($command_line, $output_file, $max_waittime);
 
   $last_output = &get_last_output();
   &change_parameters($last_output);
@@ -132,6 +134,54 @@ while (1) {
       $this_try = 0;
   }
 
+}
+
+sub runit {
+    my ($cmd, $ofn, $maxwait) = @_;
+
+    # this is the parent who will monitor the output file
+    if ($pid = fork) {
+        $stime = time;
+        $ptime = time;
+        &write_log("Monitoring job for inactivity after $maxwait seconds.\n");
+        # give it a minute before checking
+        sleep 60;
+
+        do {
+
+            # keep checking status of job
+            $status = waitpid($pid, WNOHANG);
+
+            # how long has it been since output file updated
+            $since_update = time - (stat($ofn))[9];
+            if ($since_update > $maxwait) {
+                &write_log(
+                     "No update from output file in $since_update seconds, ",
+                     "let's get out of here.\n");
+                kill 9, $pid;
+
+                &write_log("Resubmitting, better luck next time.\n");
+                $newid = &submit_job();
+                exit(0);
+            }
+
+            if ((time - $ptime) > 3600) {
+                $since_start = time - $stime;
+                &write_log(
+                    "Running smoothly for $since_start seconds, ",
+                    "will check back later.\n");
+                $ptime = time;
+            }
+
+            sleep 10;
+        } while $status == 0;
+    }
+
+    # this is the child who will run the job
+    else {
+        system($cmd);
+        exit(0);
+    }
 }
 
 sub write_log {
