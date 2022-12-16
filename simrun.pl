@@ -167,10 +167,11 @@ sub runit {
                 exit(0);
             }
 
-            if ((time - $ptime) > 3600) {
-                $since_start = time - $stime;
+            # write reassuring message every 6 hours
+            if ((time - $ptime) > 21600) {
+                $since_start = (time - $stime) / 3600;
                 &write_log(
-                    "Running smoothly for $since_start seconds, will check back later.\n");
+                    "Running smoothly for $since_start hours, will check back later.\n");
                 $ptime = time;
             }
 
