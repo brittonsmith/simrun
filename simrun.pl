@@ -146,6 +146,7 @@ sub runit {
     if ($pid = fork) {
         $stime = time;
         $ptime = time;
+        $ptime2 = time;
         &write_log("Monitoring job for inactivity after $maxwait seconds.\n");
         # give it a minute before checking
         sleep 60;
@@ -154,6 +155,15 @@ sub runit {
 
             # keep checking status of job
             $status = waitpid($pid, WNOHANG);
+
+            # write verbose logging to figure out why this doesn't work
+            if ((time - $ptime2) > $maxwait) {
+                $since_check = time - $ptime2;
+                $since_start = (time - $stime) / 3600;
+                &write_other_log("verbose.log",
+                    "$since_check seconds since last update, running for $since_start hours, status is $status.\n");
+                $ptime2 = time;
+            }
 
             # how long has it been since output file updated
             $since_update = time - (stat($ofn))[9];
@@ -181,14 +191,28 @@ sub runit {
 
     # this is the child who will run the job
     else {
+        &write_log(
+             "It's me, the child! I'm starting your enzo now.\n");
         system($cmd);
+        &write_log(
+            "Child here again. Enzo terminated cleanly and I shall now do the same.\n");
         exit(0);
     }
+
+    &write_log("Parent here, the job ended with status $status. If this seems wrong, please report.\n");
 }
 
 sub write_log {
   my ($line) = @_;
   open (LOG, ">>$log_file");
+  print LOG scalar (localtime);
+  print LOG " $line";
+  close (LOG);
+}
+
+sub write_other_log {
+  my ($fn, $line) = @_;
+  open (LOG, ">>$fn");
   print LOG scalar (localtime);
   print LOG " $line";
   close (LOG);
